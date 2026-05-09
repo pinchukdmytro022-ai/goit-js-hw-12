@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -7,13 +8,18 @@
   <title>Vanilla App Template</title>
   <link rel="stylesheet" href="./css/styles.css" />
 </head>
+
 <body>
-  <form class="form">
+  <form class="search-form">
     <input class="search-input" type="text" name="user_query" />
     <button class="search-btn" type="submit">пошук</button>
   </form>
   <ul class="gallery"></ul>
+  <button class="load-more js-load-more is-hidden" type="button">
+    Load more
+  </button>
   <span class="loader"></span>
   <script type="module" src="./main.js"></script>
 </body>
+
 </html>

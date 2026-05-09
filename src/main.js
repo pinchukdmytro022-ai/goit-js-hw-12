@@ -1,111 +1,74 @@
 import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
-import SimpleLightbox from 'simplelightbox';
-import 'simplelightbox/dist/simple-lightbox.min.css';
-import { createGalleryCardTemplate } from './js/render-functions';
-import { data } from './js/pixabay-api';
+
+import { fetchImages } from './js/pixabay-api';
+
+import {
+  renderGallery,
+  appendGallery,
+  clearGallery,
+  showLoader,
+  hideLoader,
+  showLoadMoreBtn,
+  hideLoadMoreBtn,
+  getGalleryItemsCount,
+  getCardHeight,
+} from './js/render-functions';
 
 const sbmForm = document.querySelector('.search-form');
-const gallery = document.querySelector('.gallery');
-const loader = document.querySelector('.loader');
 const loadMoreBtnEl = document.querySelector('.js-load-more');
+
 let searchedValue = '';
 let page = 1;
-let cardHeight = 0;
-let countElLi = 0;
 
-const galleryCreate = new SimpleLightbox('.gallery-link', {
-  captions: true,
-  captionsData: 'alt',
-  captionDelay: 250,
-});
-
-const onFormSbm = async event => { 
-  try {
-    event.preventDefault();
-    page = 1;
-    countElLi = 0;
-    searchedValue = sbmForm.elements.user_query.value.trim();
-
-    if (!loadMoreBtnEl.classList.contains('is-hidden')) {
-      loadMoreBtnEl.classList.add('is-hidden');
-    }
-
-    if (searchedValue === '') { 
-      iziToast.show({
-        message: `Sorry, there are no images matching your search query. Please try again!`,
-        color: 'red',
-        position: 'topRight',
-      });
-      return
-    }
-    loader.classList.add('is-open');
-
-    const response = await data(searchedValue, page);
-
-    if (response.data.total === 0) {
-      loader.classList.remove('is-open');
-      sbmForm.reset();
-      iziToast.show({
-        message: `❌ Sorry, there are no images matching your search query. Please try again!`,
-        color: 'red',
-        position: 'topRight',
-      });
-      gallery.innerHTML = '';
-      return;
-    }
-
-    const galleryCardsTemplate = response.data.hits
-      .map(imgDetails => createGalleryCardTemplate(imgDetails))
-      .join('');
-    sbmForm.reset();
-    loader.classList.remove('is-open');
-    gallery.innerHTML = galleryCardsTemplate;
-
-    galleryCreate.refresh();
-
-    const galleryCardEl = gallery.querySelector('li');
-    cardHeight = galleryCardEl.getBoundingClientRect().height;
-
-    countElLi = document.querySelectorAll('.gallery-card');
-    if (response.data.totalHits === countElLi.length) {
-      iziToast.show({
-        message: `That's all we could find on your request`,
-        color: 'yellow',
-        position: 'topRight',
-      });
-      return;
-    }
-    loadMoreBtnEl.classList.remove('is-hidden');
-  } catch (err) {
-    console.log(err);
-  }
+const showErrorMessage = message => {
+  iziToast.error({
+    message,
+    position: 'topRight',
+  });
 };
 
-const loadMorePhoto = async event => {
+const onFormSbm = async event => {
+  event.preventDefault();
+
+  searchedValue = sbmForm.elements.user_query.value.trim();
+
+  if (!searchedValue) {
+    showErrorMessage(
+      'Sorry, there are no images matching your search query. Please try again!'
+    );
+
+    return;
+  }
+
+  page = 1;
+
+  clearGallery();
+  hideLoadMoreBtn();
+  showLoader();
+
   try {
-    page += 1;
-    loader.classList.add('is-open');
-    const loadResponse = await data(searchedValue, page);
-    const galleryCardsTemplate = loadResponse.data.hits
-      .map(imgDetails => createGalleryCardTemplate(imgDetails))
-      .join('');
-    gallery.insertAdjacentHTML('beforeend', galleryCardsTemplate);
+    const response = await fetchImages(searchedValue, page);
 
-    galleryCreate.refresh();
+    if (response.totalHits === 0) {
+      showErrorMessage(
+        'Sorry, there are no images matching your search query. Please try again!'
+      );
 
-    loader.classList.remove('is-open');
-    scrollBy({
-      top: cardHeight * 2,
-      behavior: 'smooth',
-    });
+      return;
+    }
 
-    countElLi = document.querySelectorAll('.gallery-card');
-    console.log(loadResponse.data.totalHits);
-    console.log(countElLi.length)
+    renderGallery(response.hits);
 
-    if (loadResponse.data.totalHits <= countElLi.length) {
-      loadMoreBtnEl.classList.add('is-hidden');
+    sbmForm.reset();
+
+    const currentItems = getGalleryItemsCount();
+
+    if (currentItems < response.totalHits) {
+      showLoadMoreBtn();
+    } else {
+      hideLoadMoreBtn();
+
       iziToast.show({
         message: `We're sorry, but you've reached the end of search results.`,
         color: 'yellow',
@@ -113,7 +76,57 @@ const loadMorePhoto = async event => {
       });
     }
   } catch (err) {
+    iziToast.error({
+      message: 'Failed to fetch images. Please try again later.',
+      position: 'topRight',
+    });
+
     console.log(err);
+  } finally {
+    hideLoader();
+  }
+};
+
+const loadMorePhoto = async () => {
+  page += 1;
+
+  hideLoadMoreBtn();
+  showLoader();
+
+  try {
+    const response = await fetchImages(searchedValue, page);
+
+    appendGallery(response.hits);
+
+    const cardHeight = getCardHeight();
+
+    scrollBy({
+      top: cardHeight * 2,
+      behavior: 'smooth',
+    });
+
+    const currentItems = getGalleryItemsCount();
+
+    if (currentItems >= response.totalHits) {
+      hideLoadMoreBtn();
+
+      iziToast.show({
+        message: `We're sorry, but you've reached the end of search results.`,
+        color: 'yellow',
+        position: 'topRight',
+      });
+    } else {
+      showLoadMoreBtn();
+    }
+  } catch (err) {
+    iziToast.error({
+      message: 'Failed to fetch images. Please try again later.',
+      position: 'topRight',
+    });
+
+    console.log(err);
+  } finally {
+    hideLoader();
   }
 };
 

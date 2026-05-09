@@ -130,29 +130,31 @@ a {
   border-right: 1px solid #808080;
 }
 
-.gallery-img {
+.gallery-image {
   width: 100%;
   height: 380px;
   object-fit: cover;
 }
 
-.image-data {
-  display: flex;
-  flex-direction: column;
-}
-
-.data-list {
+.gallery-info {
   display: flex;
   justify-content: space-between;
   align-self: center;
+  padding: 10px 20px;
+  width: 100%;
 }
 
-.image-data-text {
+.gallery-info-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.gallery-info-title {
+  font-weight: 700;
+}
+
+.gallery-info-text {
   align-items: center;
   align-self: center;
-}
-
-.card-data {
-  padding-left: 20px;
-  padding-right: 25px;
 }

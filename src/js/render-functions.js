@@ -11,15 +11,46 @@ let lightbox = new SimpleLightbox('.gallery-link', {
   captionDelay: 250,
 });
 
-export const createGalleryCardTemplate = imgDetails => {
+export const createGalleryCardTemplate = ({
+  webformatURL,
+  largeImageURL,
+  tags,
+  likes,
+  views,
+  comments,
+  downloads,
+}) => {
   return `
     <li class="gallery-card">
-      <a class="gallery-link" href="${imgDetails.largeImageURL}">
+      <a class="gallery-link" href="${largeImageURL}">
         <img
-          src="${imgDetails.webformatURL}"
-          alt="${imgDetails.tags}"
+          class="gallery-image"
+          src="${webformatURL}"
+          alt="${tags}"
         />
       </a>
+
+      <div class="gallery-info">
+        <div class="gallery-info-item">
+          <p class="gallery-info-title">Likes</p>
+          <p class="gallery-info-text">${likes}</p>
+        </div>
+
+        <div class="gallery-info-item">
+          <p class="gallery-info-title">Views</p>
+          <p class="gallery-info-text">${views}</p>
+        </div>
+
+        <div class="gallery-info-item">
+          <p class="gallery-info-title">Comments</p>
+          <p class="gallery-info-text">${comments}</p>
+        </div>
+
+        <div class="gallery-info-item">
+          <p class="gallery-info-title">Downloads</p>
+          <p class="gallery-info-text">${downloads}</p>
+        </div>
+      </div>
     </li>
   `;
 };
